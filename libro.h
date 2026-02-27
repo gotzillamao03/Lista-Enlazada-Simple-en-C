@@ -1,12 +1,14 @@
+#ifndef LIBRO_H
+#define LIBRO_H
 
-#ifndef libro_h
-#define libro_h
+#define MAX_TITULO 50
+#define MAX_AUTOR 50
+#define MAX_ISBN 14  // 13 + '\0'
 
-#include <stdio.h>
+typedef struct {
+    char titulo[MAX_TITULO];
+    char autor[MAX_AUTOR];
+    char isbn[MAX_ISBN];
+} Libro;
 
-typedef struct Libro{
-char titulo[50];
-char autor[50];
-char isbn[13];
-}Libro;
-#endif // libro_h
+#endif

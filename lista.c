@@ -1,20 +1,42 @@
-#include "lista.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "lista.h"
 
-Nodo* CrearNodo(Libro* libro) {
+/* ----------- Función interna ----------- */
+static Nodo* CrearNodo(Libro* libro) {
     Nodo* nodo = (Nodo*) malloc(sizeof(Nodo));
-    strncpy(nodo->libro.titulo, libro->titulo, 50);
-    strncpy(nodo->libro.autor, libro->autor, 50);
-    strncpy(nodo->libro.isbn, libro->isbn, 13);
+    if (!nodo) {
+        printf("Error: No se pudo asignar memoria.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    strncpy(nodo->libro.titulo, libro->titulo, MAX_TITULO - 1);
+    nodo->libro.titulo[MAX_TITULO - 1] = '\0';
+
+    strncpy(nodo->libro.autor, libro->autor, MAX_AUTOR - 1);
+    nodo->libro.autor[MAX_AUTOR - 1] = '\0';
+
+    strncpy(nodo->libro.isbn, libro->isbn, MAX_ISBN - 1);
+    nodo->libro.isbn[MAX_ISBN - 1] = '\0';
+
     nodo->siguiente = NULL;
     return nodo;
 }
 
-void DestruirNodo(Nodo* nodo) {
-    free(nodo);
+/* ----------- Inicialización ----------- */
+void InicializarLista(Lista* lista) {
+    lista->cabeza = NULL;
+    lista->longitud = 0;
 }
 
+void DestruirLista(Lista* lista) {
+    while (!EstaVacia(lista)) {
+        EliminarPrincipio(lista);
+    }
+}
+
+/* ----------- Inserciones ----------- */
 void InsertarPrincipio(Lista* lista, Libro* libro) {
     Nodo* nodo = CrearNodo(libro);
     nodo->siguiente = lista->cabeza;
@@ -24,104 +46,99 @@ void InsertarPrincipio(Lista* lista, Libro* libro) {
 
 void InsertarFinal(Lista* lista, Libro* libro) {
     Nodo* nodo = CrearNodo(libro);
-    if (lista->cabeza == NULL) {
+
+    if (EstaVacia(lista)) {
         lista->cabeza = nodo;
     } else {
-        Nodo* puntero = lista->cabeza;
-        while (puntero->siguiente) {
-            puntero = puntero->siguiente;
+        Nodo* actual = lista->cabeza;
+        while (actual->siguiente != NULL) {
+            actual = actual->siguiente;
         }
-        puntero->siguiente = nodo;
+        actual->siguiente = nodo;
     }
+
     lista->longitud++;
 }
 
-void InsertarDespues(int n, Lista* lista, Libro* libro) {
-    Nodo* nodo = CrearNodo(libro);
-    if (lista->cabeza == NULL) {
-        lista->cabeza = nodo;
-    } else {
-        Nodo* puntero = lista->cabeza;
-        int posicion = 0;
-        while (posicion < n && puntero->siguiente) {
-            puntero = puntero->siguiente;
-            posicion++;
-        }
-        nodo->siguiente = puntero->siguiente;
-        puntero->siguiente = nodo;
+/* ----------- Eliminaciones ----------- */
+void EliminarPrincipio(Lista* lista) {
+    if (!EstaVacia(lista)) {
+        Nodo* temp = lista->cabeza;
+        lista->cabeza = temp->siguiente;
+        free(temp);
+        lista->longitud--;
     }
-    lista->longitud++;
 }
 
-Libro* Obtener(int n, Lista* lista) {
-    if (lista->cabeza == NULL) return NULL;
+void EliminarUltimo(Lista* lista) {
+    if (EstaVacia(lista)) return;
 
-    Nodo* puntero = lista->cabeza;
-    int posicion = 0;
-
-    while (posicion < n && puntero->siguiente) {
-        puntero = puntero->siguiente;
-        posicion++;
+    if (lista->cabeza->siguiente == NULL) {
+        free(lista->cabeza);
+        lista->cabeza = NULL;
+    } else {
+        Nodo* actual = lista->cabeza;
+        while (actual->siguiente->siguiente != NULL) {
+            actual = actual->siguiente;
+        }
+        free(actual->siguiente);
+        actual->siguiente = NULL;
     }
 
-    if (posicion != n) return NULL;
-    return &puntero->libro;
+    lista->longitud--;
+}
+
+void EliminarElemento(Lista* lista, int indice) {
+    if (indice < 0 || indice >= lista->longitud) return;
+
+    if (indice == 0) {
+        EliminarPrincipio(lista);
+        return;
+    }
+
+    Nodo* actual = lista->cabeza;
+    for (int i = 0; i < indice - 1; i++) {
+        actual = actual->siguiente;
+    }
+
+    Nodo* temp = actual->siguiente;
+    actual->siguiente = temp->siguiente;
+    free(temp);
+    lista->longitud--;
+}
+
+/* ----------- Acceso ----------- */
+Libro* Obtener(Lista* lista, int indice) {
+    if (indice < 0 || indice >= lista->longitud) return NULL;
+
+    Nodo* actual = lista->cabeza;
+    for (int i = 0; i < indice; i++) {
+        actual = actual->siguiente;
+    }
+
+    return &actual->libro;
+}
+
+/* ----------- Utilidad ----------- */
+int EstaVacia(Lista* lista) {
+    return lista->cabeza == NULL;
 }
 
 int Contar(Lista* lista) {
     return lista->longitud;
 }
 
-int EstaVacia(Lista* lista) {
-    return lista->cabeza == NULL;
-}
+void MostrarLista(Lista* lista) {
+    Nodo* actual = lista->cabeza;
+    int i = 1;
 
-void EliminarPrincipio(Lista* lista) {
-    if (lista->cabeza) {
-        Nodo* eliminado = lista->cabeza;
-        lista->cabeza = lista->cabeza->siguiente;
-        DestruirNodo(eliminado);
-        lista->longitud--;
-    }
-}
-
-void EliminarUltimo(Lista* lista) {
-    if (lista->cabeza) {
-        if (lista->cabeza->siguiente) {
-            Nodo* puntero = lista->cabeza;
-            while (puntero->siguiente->siguiente) {
-                puntero = puntero->siguiente;
-            }
-            Nodo* eliminado = puntero->siguiente;
-            puntero->siguiente = NULL;
-            DestruirNodo(eliminado);
-        } else {
-            Nodo* eliminado = lista->cabeza;
-            lista->cabeza = NULL;
-            DestruirNodo(eliminado);
-        }
-        lista->longitud--;
-    }
-}
-
-void EliminarElemento(int n, Lista* lista) {
-    if (lista->cabeza) {
-        if (n == 0) {
-            Nodo* eliminado = lista->cabeza;
-            lista->cabeza = lista->cabeza->siguiente;
-            DestruirNodo(eliminado);
-            lista->longitud--;
-        } else if (n < lista->longitud) {
-            Nodo* puntero = lista->cabeza;
-            int posicion = 0;
-            while (posicion < (n - 1)) {
-                puntero = puntero->siguiente;
-                posicion++;
-            }
-            Nodo* eliminado = puntero->siguiente;
-            puntero->siguiente = eliminado->siguiente;
-            DestruirNodo(eliminado);
-            lista->longitud--;
-        }
+    while (actual != NULL) {
+        printf("%d. %s - %s - %s\n",
+               i,
+               actual->libro.titulo,
+               actual->libro.autor,
+               actual->libro.isbn);
+        actual = actual->siguiente;
+        i++;
     }
 }

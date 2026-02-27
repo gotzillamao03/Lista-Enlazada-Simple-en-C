@@ -13,17 +13,21 @@ typedef struct {
     int longitud;
 } Lista;
 
-// Prototipos
-Nodo* CrearNodo(Libro* libro);
-void DestruirNodo(Nodo* nodo);
+/* Inicialización y destrucción */
+void InicializarLista(Lista* lista);
+void DestruirLista(Lista* lista);
+
+/* Operaciones básicas */
 void InsertarPrincipio(Lista* lista, Libro* libro);
 void InsertarFinal(Lista* lista, Libro* libro);
-void InsertarDespues(int n, Lista* lista, Libro* libro);
-Libro* Obtener(int n, Lista* lista);
-int Contar(Lista* lista);
-int EstaVacia(Lista* lista);
+Libro* Obtener(Lista* lista, int indice);
 void EliminarPrincipio(Lista* lista);
 void EliminarUltimo(Lista* lista);
-void EliminarElemento(int n, Lista* lista);
+void EliminarElemento(Lista* lista, int indice);
+
+/* Utilidad */
+int EstaVacia(Lista* lista);
+int Contar(Lista* lista);
+void MostrarLista(Lista* lista);
 
 #endif
